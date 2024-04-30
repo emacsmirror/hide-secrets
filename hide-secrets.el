@@ -31,6 +31,7 @@
 
 ;;; Code: 
 
+
 ;; variables
 (when (string< emacs-version "30.1")
   (defconst password-colon-equivalents
@@ -53,8 +54,63 @@
     "משתמש" "bruger" "bruker" "notandi" "käyttäjä" "kasutaja" "utilizador"
     "mtumiaji" "користувач" "用戶" "用户" "yonghu"))
 
+;; customization
+
+(defgroup hide-secrets nil
+  "Hide various secrets in Emacs buffers."
+  :group 'convenience)
+
+(defcustom hide-secrets-alist
+  '(("username" . (:regexp (concat
+			    (rx-to-string
+			     `(: bol (* nonl)
+      				 (or
+				  (| . ,user-word-equivalents)
+				  (| . ,name-word-equivalents)
+				  (seq
+				   (| . ,user-word-equivalents)
+				   (zero-or-one blank)
+				   (| . ,name-word-equivalents)))
+				 (* nonl) (any . ,password-colon-equivalents)
+				 (? "\^@") (* blank)))
+			    "\\(.*\\)")
+			   :match 1
+			   :display "Max Mustermann"))
+    ("phone number" . (:regexp (phone-rx (rx (seq
+					      (or space punctuation)
+					      (group
+					       (seq
+						(or "+" "0")
+						(repeat 2 2 digit)
+						(one-or-more (or digit " " "-")))))))
+			       :match 1
+			       :display "0123 456 789")))
+  "List of secrets to hide. Each secret is identified by a KEYWORD string.
+   Then for each secret a property list must contain the following keywords:
+
+   :regex
+   :match
+   :display"
+  :group 'hide-secrets)
+
+
+
 ;; functions
-(defun sm/hide-mac-addresses ()
+(defun hide-secets--get-regex (secret)
+  "Get the regex to match SECRET in the buffer"
+  (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :regexp)))
+
+(defun hide-secets--get-match (secret)
+  "Get the display matching group of the regex matching SECRET to replace."
+  (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :match)))
+
+
+(defun hide-secets--get-display (secret)
+  "Get the display string to replace SECRET in the buffer"
+  (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :display)))
+
+
+(defun hide-mac-addresses ()
   "Hide MAC addresses in the buffer."
   (interactive)
   (let ((mac-rx (rx word-boundary
@@ -72,7 +128,7 @@
 	  (overlay-put overlay 'display "**:**:**:**:**:**"))))))
 
 
-(defun sm/hide-ip-addresses ()
+(defun hide-ip-addresses ()
   "Hide IP addresses in the buffer."
   (interactive)
   (let ((ipv4-rx (rx word-boundary
@@ -102,7 +158,7 @@
 	  (overlay-put overlay 'hidden-text t)
 	  (overlay-put overlay 'display "****:****:****::****"))))))
 
-(defun sm/hide-email-addresses ()
+(defun hide-email-addresses ()
   "Hide email addresses in the buffer."
   (interactive)
   (let ((email-rx (rx (one-or-more (or alnum "." "_" "-"))
@@ -116,31 +172,21 @@
           (overlay-put overlay 'hidden-text t)
           (overlay-put overlay 'display "******@******"))))))
 
-(defun sm/hide-names ()
+(defun hide-names ()
   "Hide (User) names in buffer."
   (interactive)
-  (let ((pwd-rx (concat
-		 (rx-to-string
-		  `(: bol (* nonl)
-      		      (or
-		       (| . ,user-word-equivalents)
-		       (| . ,name-word-equivalents)
-		       (seq
-			(| . ,user-word-equivalents)
-			(zero-or-one blank)
-			(| . ,name-word-equivalents)))
-		      (* nonl) (any . ,password-colon-equivalents)
-		      (? "\^@") (* blank)))
-		 "\\(.*\\)")))
+  (let ((rx (hide-secets--get-regex "username"))
+	(match  (hide-secets--get-match "username"))
+	(display  (hide-secets--get-display "username")))
     (save-excursion
       (goto-char (point-min))
-      (while (re-search-forward pwd-rx nil t)
-	(let ((overlay (make-overlay (match-beginning 1) (match-end 1))))
+      (while (re-search-forward rx nil t)
+	(let ((overlay (make-overlay (match-beginning match) (match-end match))))
 	  (overlay-put overlay 'hidden-text t)
-	  (overlay-put overlay 'display "******"))))))
+	  (overlay-put overlay 'display display))))))
 
 
-(defun sm/hide-passwords ()
+(defun hide-passwords ()
   "Hide passwords in buffer."
   (interactive)
   (let ((pwd-rx (concat
@@ -157,7 +203,7 @@
 	  (overlay-put overlay 'hidden-text t)
 	  (overlay-put overlay 'display "******"))))))
 
-(defun sm/hide-private-keys ()
+(defun hide-private-keys ()
   "Hide private keys in buffer."
   (interactive)
   (let ((pkey-rx (rx
@@ -184,7 +230,7 @@
 	  (overlay-put overlay 'display "******")
 	  )))))
 
-(defun sm/hide-hash-sums ()
+(defun hide-hash-sums ()
   "Hide hash-sums in buffer."
   (interactive)
   (let ((hash-rx (rx
@@ -199,19 +245,19 @@
 	  )))))
 
 ;;;###autoload
-(defun sm/hide-secrets ()
+(defun hide-secrets ()
   "Hide IP addresses, passwords, and email addresses in the buffer."
   (interactive)
-  (sm/hide-mac-addresses)
-  (sm/hide-ip-addresses)
-  (sm/hide-passwords)
-  (sm/hide-names)
-  (sm/hide-email-addresses)
-  (sm/hide-private-keys)
-  (sm/hide-hash-sums)
+  (hide-mac-addresses)
+  (hide-ip-addresses)
+  (hide-passwords)
+  (hide-names)
+  (hide-email-addresses)
+  (hide-private-keys)
+  (hide-hash-sums)
   )
 
-(defun sm/show-secrets ()
+(defun show-secrets ()
   "Remove all overlays with the `hidden-text' property in the buffer."
   (interactive)
   (dolist (overlay (overlays-in (point-min) (point-max)))
@@ -224,16 +270,16 @@
   "Minor mode to hide secrets like password, keys and IP addresses in buffers."
   :lighter " HS"
   (if hide-secrets-mode
-      (progn (sm/hide-secrets)
-	     (add-hook 'post-command-hook 'sm/hide-secrets nil t)
+      (progn (hide-secrets)
+	     (add-hook 'post-command-hook 'hide-secrets nil t)
 	     (when (equal major-mode #'eat-mode)
-	       (add-hook 'eat-update-hook 'sm/hide-secrets nil t))
+	       (add-hook 'eat-update-hook 'hide-secrets nil t))
 	     (when (equal major-mode #'eshell-mode)
-	       (add-hook 'eshell-post-command-hook 'sm/hide-secrets nil t)))
-    (sm/show-secrets)
-    (remove-hook 'post-command-hook 'sm/hide-secrets t)
-    (remove-hook 'eat-update-hook 'sm/hide-secrets t)
-    (remove-hook 'eshell-post-command-hook 'sm/hide-secrets t)))
+	       (add-hook 'eshell-post-command-hook 'hide-secrets nil t)))
+    (show-secrets)
+    (remove-hook 'post-command-hook 'hide-secrets t)
+    (remove-hook 'eat-update-hook 'hide-secrets t)
+    (remove-hook 'eshell-post-command-hook 'hide-secrets t)))
 
 (provide 'hide-secrets)
 

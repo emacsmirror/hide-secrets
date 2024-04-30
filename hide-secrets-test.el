@@ -104,79 +104,79 @@ tpGh8R7pDU8H8AAAAOc2ViYXN0aWFuQHN1c2UBAgMEBQ==
       (when (equal (overlay-get overlay prop) value)
         (setq found t)))))
 
-(ert-deftest test-sm/hide-mac-addresses ()
-  "Test if mac-addresses are hidden."
-  (with-temp-buffer 
-    (erase-buffer)
-    (mapcar 'insert MAC-test-cases)
-    (sm/hide-mac-addresses)
-    (should (test-overlay-properties 'hidden-text t)) 
-    (should (test-overlay-properties 'display "**:**:**:**:**:**"))))
+(ert-deftest test-hide-mac-addresses ()
+	     "Test if mac-addresses are hidden."
+	     (with-temp-buffer 
+	       (erase-buffer)
+	       (mapcar 'insert MAC-test-cases)
+	       (hide-mac-addresses)
+	       (should (test-overlay-properties 'hidden-text t)) 
+	       (should (test-overlay-properties 'display "**:**:**:**:**:**"))))
 
 
-(ert-deftest test-sm/hide-ip-addresses ()
-  "Test if IP addresses are hidden."
-  (with-temp-buffer
-    (erase-buffer)
-    (mapcar 'insert IPv4-test-cases)
-    (mapcar 'insert IPv6-test-cases)
-    (sm/hide-ip-addresses)
-    (should (test-overlay-properties 'hidden-text t)) 
-    (should (test-overlay-properties 'display "***.***.***.***"))
-    (should (test-overlay-properties 'display "****:****:****::****"))))
+(ert-deftest test-hide-ip-addresses ()
+	     "Test if IP addresses are hidden."
+	     (with-temp-buffer
+	       (erase-buffer)
+	       (mapcar 'insert IPv4-test-cases)
+	       (mapcar 'insert IPv6-test-cases)
+	       (hide-ip-addresses)
+	       (should (test-overlay-properties 'hidden-text t)) 
+	       (should (test-overlay-properties 'display "***.***.***.***"))
+	       (should (test-overlay-properties 'display "****:****:****::****"))))
 
-(ert-deftest test-sm/hide-passwords ()
-  "Test if passwords are hidden."
-  (with-temp-buffer
-    (mapcar 'insert password-test-cases)
-    (sm/hide-passwords)
-    (should (test-overlay-properties 'hidden-text t)) 
-    (should (test-overlay-properties 'display "******"))))
+(ert-deftest test-hide-passwords ()
+	     "Test if passwords are hidden."
+	     (with-temp-buffer
+	       (mapcar 'insert password-test-cases)
+	       (hide-passwords)
+	       (should (test-overlay-properties 'hidden-text t)) 
+	       (should (test-overlay-properties 'display "******"))))
 
-(ert-deftest test-sm/hide-email-addresses ()
-  "Test if email addresses are hidden."
-  (with-temp-buffer
-    (mapcar 'insert email-test-cases)
-    (sm/hide-email-addresses)
-    (should (test-overlay-properties 'hidden-text t)) 
-    (should (test-overlay-properties 'display "******@******"))))
-
-
-(ert-deftest test-sm/hide-names ()
-  "Test if names are hidden."
-  (with-temp-buffer
-    (mapcar 'insert name-test-cases)
-    (sm/hide-names)
-    (should (test-overlay-properties 'hidden-text t)) 
-    (should (test-overlay-properties 'display "******"))))
-
-(ert-deftest test-sm/hide-private-keys ()
-  "Test if private keys are hidden."
-  (with-temp-buffer
-    (mapcar 'insert private-key-test-case)
-    (sm/hide-private-keys)
-    (mark-whole-buffer)
-    (should (test-overlay-properties 'hidden-text t))
-    (should (test-overlay-properties 'display "******"))
-    ))
-
-(ert-deftest test-sm/hide-hash-sums ()
-  "Test if hash sums are hidden."
-  (with-temp-buffer
-    (mapcar 'insert hash-sum-test-case)
-    (sm/hide-hash-sums)
-    (mark-whole-buffer)
-    (should (test-overlay-properties 'hidden-text t))
-    (should (test-overlay-properties 'display "******"))
-    ))
+(ert-deftest test-hide-email-addresses ()
+	     "Test if email addresses are hidden."
+	     (with-temp-buffer
+	       (mapcar 'insert email-test-cases)
+	       (hide-email-addresses)
+	       (should (test-overlay-properties 'hidden-text t)) 
+	       (should (test-overlay-properties 'display "******@******"))))
 
 
-(ert-deftest test-sm/hide-secrets ()
-  "Test if all secrets are hidden."
-  (with-temp-buffer
-    (mapcar 'insert all-test-cases)
-    (sm/hide-secrets)
-    (should (test-overlay-properties 'hidden-text t)) 
-    (should (test-overlay-properties 'display "***.***.***.***"))
-    (should (test-overlay-properties 'display "******"))
-    (should (test-overlay-properties 'display "******@******"))))
+(ert-deftest test-hide-names ()
+	     "Test if names are hidden."
+	     (with-temp-buffer
+	       (mapcar 'insert name-test-cases)
+	       (hide-names)
+	       (should (test-overlay-properties 'hidden-text t)) 
+	       (should (test-overlay-properties 'display "******"))))
+
+(ert-deftest test-hide-private-keys ()
+	     "Test if private keys are hidden."
+	     (with-temp-buffer
+	       (mapcar 'insert private-key-test-case)
+	       (hide-private-keys)
+	       (mark-whole-buffer)
+	       (should (test-overlay-properties 'hidden-text t))
+	       (should (test-overlay-properties 'display "******"))
+	       ))
+
+(ert-deftest test-hide-hash-sums ()
+	     "Test if hash sums are hidden."
+	     (with-temp-buffer
+	       (mapcar 'insert hash-sum-test-case)
+	       (hide-hash-sums)
+	       (mark-whole-buffer)
+	       (should (test-overlay-properties 'hidden-text t))
+	       (should (test-overlay-properties 'display "******"))
+	       ))
+
+
+(ert-deftest test-hide-secrets ()
+	     "Test if all secrets are hidden."
+	     (with-temp-buffer
+	       (mapcar 'insert all-test-cases)
+	       (hide-secrets)
+	       (should (test-overlay-properties 'hidden-text t)) 
+	       (should (test-overlay-properties 'display "***.***.***.***"))
+	       (should (test-overlay-properties 'display "******"))
+	       (should (test-overlay-properties 'display "******@******"))))
