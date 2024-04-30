@@ -51,8 +51,7 @@
     "ব্যবহারকারী" "gebruiker" "वापरकर्ता" "ഉപയോക്താവ്" "பயனர்" "వాడుకరి" "ਯੂਜ਼ਰ"
     "प्रयोगकर्ता" "प्रयोगकर्ता" "ବ୍ୟବହାରକର୍ତ୍ତା" "mtumiaji" "notandi" "භාෂාවෙහි පරිශීලක" "صارف"
     "משתמש" "bruger" "bruker" "notandi" "käyttäjä" "kasutaja" "utilizador"
-    "mtumiaji" "користувач" "用戶" "用户" "用戶" "用户" "用戶" "yonghu" "yonghu"
-    "用戶" "用户" "用戶" "yonghu"))
+    "mtumiaji" "користувач" "用戶" "用户" "yonghu"))
 
 ;; functions
 (defun sm/hide-mac-addresses ()
