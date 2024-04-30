@@ -1,0 +1,32 @@
+:LaTeX_PROPERTIES:
+#+LANGUAGE: de
+#+OPTIONS: d:nil todo:nil pri:nil tags:nil
+#+OPTIONS: H:4
+#+LaTeX_CLASS: orgstandard
+#+LaTeX_CMD: xelatex
+:END:
+
+#+TITLE: README
+#+AUTHOR: Sebastian Meisel
+#+EMAIL: sebastian.meisel@gmail.com
+
+* Hide secrets mode
+
+Hide secrets mode is a minor mode for GNU Emacs to hide all kind of secrets in Emacs buffers,
+using overlays.
+
+At the moments it tries to hide:
+
+ - user names
+ - email addresses
+ - passwords
+ - IP addresses (both v4 and v6)
+ - hash sums
+ - public ssh keys
+
+Please feel free to ask for additional secrets.
+
+
+# Local Variables:
+# jinx-languages: "en_US"
+# End:
