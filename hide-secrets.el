@@ -2,10 +2,10 @@
 ;; Copyright © 2020, by Sebastian Meisel
 
 ;; Author: Sebastian Meisel <sebastian.meisel@gmail.com>
-;; Version: 1.1
-;; Created:  November 12, 2023
-;; Keywords: unix
-;; Homepage: https://github.com/SebastianMeisel/journalctl-mode
+;; Version: 0.4
+;; Created:  April 30, 2024
+;; Keywords: passwords, secrets, keys
+;; Homepage: https://gitlab.com/ostseepinguin1/hide-secrets-el
 ;; Package-Requires: ((emacs "29.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -26,8 +26,8 @@
 ;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; This package provides functions for hiding secrets like IP addresses
-;;  and passwords in Emacs buffers.
+;; This package provides functions for hiding secrets like IP addresses,
+;; hash sums and passwords in Emacs buffers.
 
 ;;; Code: 
 
@@ -42,8 +42,17 @@
       )))
 
 (defconst name-word-equivalents
-  '("name" "имя" "नाम" "nombre" "nom" "nome" "নাম" "naam" "नाव" "പേര്" "பெயர்" "పేరు" "ਨਾਮ" "नाम" "নাম" "jina" "nom" "නම" "نام" "اسم" "שם" "navn" "nom" "nombre" "nafn" "نام" "nimi" "nome" "imya" "பெயர்" "الاسم" "ім'я" "اسم" "名"))
+  '("name" "имя" "नाम" "nombre" "nom" "nome" "নাম" "naam" "नाव" "പേര്" "பெயர்"
+    "పేరు" "ਨਾਮ" "नाम" "নাম" "jina" "nom" "නම" "نام" "اسم" "שם" "navn" "nom"
+    "nombre" "nafn" "نام" "nimi" "nome" "imya" "பெயர்" "الاسم" "ім'я" "اسم" "名"))
 
+(defconst user-word-equivalents
+  '("user" "Benutzer" "пользователь" "उपयोगकर्ता" "usuario" "utilisateur" "utente"
+    "ব্যবহারকারী" "gebruiker" "वापरकर्ता" "ഉപയോക്താവ്" "பயனர்" "వాడుకరి" "ਯੂਜ਼ਰ"
+    "प्रयोगकर्ता" "प्रयोगकर्ता" "ବ୍ୟବହାରକର୍ତ୍ତା" "mtumiaji" "notandi" "භාෂාවෙහි පරිශීලක" "صارف"
+    "משתמש" "bruger" "bruker" "notandi" "käyttäjä" "kasutaja" "utilizador"
+    "mtumiaji" "користувач" "用戶" "用户" "用戶" "用户" "用戶" "yonghu" "yonghu"
+    "用戶" "用户" "用戶" "yonghu"))
 
 ;; functions
 (defun sm/hide-mac-addresses ()
@@ -109,19 +118,25 @@
           (overlay-put overlay 'display "******@******"))))))
 
 (defun sm/hide-names ()
-  "Hide names in buffer."
+  "Hide (User) names in buffer."
   (interactive)
   (let ((pwd-rx (concat
 		 (rx-to-string
 		  `(: bol (* nonl)
-		      (group (| . ,name-word-equivalents))
+      		      (or
+		       (| . ,user-word-equivalents)
+		       (| . ,name-word-equivalents)
+		       (seq
+			(| . ,user-word-equivalents)
+			(zero-or-one blank)
+			(| . ,name-word-equivalents)))
 		      (* nonl) (any . ,password-colon-equivalents)
 		      (? "\^@") (* blank)))
 		 "\\(.*\\)")))
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward pwd-rx nil t)
-	(let ((overlay (make-overlay (match-beginning 2) (match-end 2))))
+	(let ((overlay (make-overlay (match-beginning 1) (match-end 1))))
 	  (overlay-put overlay 'hidden-text t)
 	  (overlay-put overlay 'display "******"))))))
 
@@ -191,6 +206,7 @@
   (sm/hide-mac-addresses)
   (sm/hide-ip-addresses)
   (sm/hide-passwords)
+  (sm/hide-names)
   (sm/hide-email-addresses)
   (sm/hide-private-keys)
   (sm/hide-hash-sums)
