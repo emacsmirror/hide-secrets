@@ -142,12 +142,13 @@
     ("hash" . (:regexp (rx
      			(seq word-boundary
      			     (>= 32 hex-digit))))))
-  "List of secrets to hide. Each secret is identified by a KEYWORD string.
-   Then for each secret a property list must contain the following keywords:
+  "List of secrets to hide.Each secret is identified by a KEYWORD string.Then
+   for each secret a property list must contain the following keywords:
 
-   :regex    a regular expression to match the secret.
-   :match    the matching group. Default to 0 (full match).
-   :display  a string that is displayed instead of the secret (default: ***********)"
+   :regex a regular expression to match the secret.
+   :match the matching group.Default to 0 (full match).
+   :display a string that is displayed instead of the secret
+           (default:***********)."
   :group 'hide-secrets
   :type 'alist)
 
