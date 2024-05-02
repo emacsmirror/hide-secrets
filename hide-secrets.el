@@ -76,22 +76,80 @@
 			    "\\(.*\\)")
 			   :match 1
 			   :display "Max Mustermann"))
-    ("phone number" . (:regexp (phone-rx (rx (seq
-					      (or space punctuation)
-					      (group
-					       (seq
-						(or "+" "0")
-						(repeat 2 2 digit)
-						(one-or-more (or digit " " "-")))))))
-			       :match 1
-			       :display "0123 456 789")))
+    ("phone" . (:regexp (rx (seq
+			     (or (not "0") (not "+"))
+			     (group
+			      (seq
+			       (or "+" "0")
+			       (repeat 2 2 digit)
+			       (zero-or-more (or digit " " "-"))
+			       (one-or-more digit)))))
+			:match 0
+			:display "0123 456 789"))
+    ("email" . (:regexp (rx (one-or-more (or alnum "." "_" "-" "+"))
+			    "@"
+			    (one-or-more (or alnum "." "_" "-"))
+			    "." (repeat 2 6 alnum))
+			:display "max.mustermann@provider.com"))
+    ("mac" . (:regexp (rx word-boundary
+			  (repeat 2 2
+				  (repeat 2 2 hex-digit) (zero-or-one (any "." ":" "-"))
+				  (repeat 2 2 hex-digit) (any "." ":" "-"))
+			  (repeat 2 2 hex-digit) (zero-or-one (any "." ":" "-"))
+			  (repeat 2 2 hex-digit)
+			  word-boundary)
+		      :display "01:23:45:67:89:ab"))
+    ("password" . (:regexp (concat
+			    (rx-to-string
+			     `(: bol (* nonl)
+				 (group (| . ,password-word-equivalents))
+				 (* nonl) (any . ,password-colon-equivalents)
+				 (? "\^@") (* blank)))
+			    "\\(.*\\)")
+			   :match 2
+			   :display "secretPassw#rd"))
+    ("IPv4" . (:regexp (rx word-boundary
+			   (repeat 1 3 digit) "." (repeat 1 3 digit) "."
+			   (repeat 1 3 digit) "." (repeat 1 3 digit)
+			   word-boundary)
+		       :display "123.145.167.189"))
+    ("IPv6" . (:regexp (rx 
+			(or
+			 (seq (repeat 2 2 ":")(repeat 1 4 hex-digit))
+			 (seq word-boundary
+			      (repeat 7 7 (repeat 1 4 hex-digit) ":")
+			      (repeat 1 4 hex-digit))
+			 (seq word-boundary
+			      (repeat 1 6 (repeat 1 4 hex-digit) ":")
+			      (repeat 1 6 ":" (repeat 1 4 hex-digit))))
+			word-boundary)
+		       :display "2100:fedc::ba98:7654:3210"))
+    ("private ssh" . (:regexp (rx
+			       (one-or-more "-")
+			       "BEGIN "
+			       (zero-or-more (any "A-Z"))
+			       " PRIVATE KEY"
+			       (one-or-more "-")
+			       "\n"
+			       (group (repeat 256 4096
+					      (any alnum cntrl "/" "+" "=")))
+			       "\n"
+			       (one-or-more "-")
+			       "END "
+			       (zero-or-more (any "A-Z"))
+			       " PRIVATE KEY"
+			       (one-or-more "-"))))
+    ("hash" . (:regexp (rx
+     			(seq word-boundary
+     			     (>= 32 hex-digit))))))
   "List of secrets to hide. Each secret is identified by a KEYWORD string.
    Then for each secret a property list must contain the following keywords:
 
-   :regex
-   :match
-   :display"
-  :group 'hide-secrets)
+   :regex    a regular expression to match the secret.
+   :match    the matching group. Default to 0 (full match).
+   :display  a string that is displayed instead of the secret (default: ***********)"
+  :group 'hide-secrets
+  :type 'alist)
 
 
 
@@ -109,152 +167,42 @@
   "Get the display string to replace SECRET in the buffer"
   (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :display)))
 
-
-(defun hide-mac-addresses ()
-  "Hide MAC addresses in the buffer."
-  (interactive)
-  (let ((mac-rx (rx word-boundary
-                    (repeat 2 2
-			    (repeat 2 2 hex-digit) (zero-or-one (any "." ":" "-"))
-			    (repeat 2 2 hex-digit) (any "." ":" "-"))
-		    (repeat 2 2 hex-digit) (zero-or-one (any "." ":" "-"))
-		    (repeat 2 2 hex-digit)
-                    word-boundary)))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward mac-rx nil t)
-	(let ((overlay (make-overlay (match-beginning 0) (match-end 0))))
-	  (overlay-put overlay 'hidden-text t)
-	  (overlay-put overlay 'display "**:**:**:**:**:**"))))))
-
-
-(defun hide-ip-addresses ()
-  "Hide IP addresses in the buffer."
-  (interactive)
-  (let ((ipv4-rx (rx word-boundary
-                     (repeat 1 3 digit) "." (repeat 1 3 digit) "."
-                     (repeat 1 3 digit) "." (repeat 1 3 digit)
-                     word-boundary))
-        (ipv6-rx (rx 
-		  (or
-		   (seq (repeat 2 2 ":")(repeat 1 4 hex-digit))
-		   (seq word-boundary
-			(repeat 7 7 (repeat 1 4 hex-digit) ":")
-			(repeat 1 4 hex-digit))
-		   (seq word-boundary
-			(repeat 1 6 (repeat 1 4 hex-digit) ":")
-			(repeat 1 6 ":" (repeat 1 4 hex-digit))))
-		  word-boundary)))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward ipv4-rx nil t)
-	(let ((overlay (make-overlay (match-beginning 0) (match-end 0))))
-	  (overlay-put overlay 'hidden-text t)
-	  (overlay-put overlay 'display "***.***.***.***"))))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward ipv6-rx nil t)
-	(let ((overlay (make-overlay (match-beginning 0) (match-end 0))))
-	  (overlay-put overlay 'hidden-text t)
-	  (overlay-put overlay 'display "****:****:****::****"))))))
-
-(defun hide-email-addresses ()
-  "Hide email addresses in the buffer."
-  (interactive)
-  (let ((email-rx (rx (one-or-more (or alnum "." "_" "-"))
-		      "@"
-		      (one-or-more (or alnum "." "_" "-"))
-		      "." (repeat 2 6 alnum))))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward email-rx nil t)
-        (let ((overlay (make-overlay (match-beginning 0) (match-end 0))))
-          (overlay-put overlay 'hidden-text t)
-          (overlay-put overlay 'display "******@******"))))))
-
-(defun hide-names ()
-  "Hide (User) names in buffer."
-  (interactive)
-  (let ((rx (hide-secets--get-regex "username"))
-	(match  (hide-secets--get-match "username"))
-	(display  (hide-secets--get-display "username")))
+(defun hide--secret (secret)
+  "Hide all occurrences of SECRET in buffer.
+SECRET is a key in the hide-secrets-alist."
+  (let ((rx (hide-secets--get-regex secret))
+	(match (or (hide-secets--get-match secret) 0))
+	(display  (or (hide-secets--get-display secret) (make-string 10 ?*))))
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward rx nil t)
 	(let ((overlay (make-overlay (match-beginning match) (match-end match))))
 	  (overlay-put overlay 'hidden-text t)
-	  (overlay-put overlay 'display display))))))
+	  (overlay-put overlay 'display display)
+	  (overlay-put overlay 'face 'modus-themes-subtle-cyan))))))
 
+;;; from asoc.el
+;;;###autoload
+(unless (locate-library "asoc.el")
+  (defun asoc-keys (alist)
+    "Return a list of unique keys in ALIST.
 
-(defun hide-passwords ()
-  "Hide passwords in buffer."
-  (interactive)
-  (let ((pwd-rx (concat
-		 (rx-to-string
-		  `(: bol (* nonl)
-		      (group (| . ,password-word-equivalents))
-		      (* nonl) (any . ,password-colon-equivalents)
-		      (? "\^@") (* blank)))
-		 "\\(.*\\)")))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward pwd-rx nil t)
-	(let ((overlay (make-overlay (match-beginning 2) (match-end 2))))
-	  (overlay-put overlay 'hidden-text t)
-	  (overlay-put overlay 'display "******"))))))
-
-(defun hide-private-keys ()
-  "Hide private keys in buffer."
-  (interactive)
-  (let ((pkey-rx (rx
-		  (one-or-more "-")
-		  "BEGIN "
-		  (zero-or-more (any "A-Z"))
-		  " PRIVATE KEY"
-		  (one-or-more "-")
-		  "\n"
-		  (group (repeat 256 4096
-				 (any alnum cntrl "/" "+" "=")))
-		  "\n"
-		  (one-or-more "-")
-		  "END "
-		  (zero-or-more (any "A-Z"))
-		  " PRIVATE KEY"
-		  (one-or-more "-")
-		  )))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward pkey-rx nil t)
-	(let ((overlay (make-overlay (match-beginning 1) (match-end 1))))
-	  (overlay-put overlay 'hidden-text t)
-	  (overlay-put overlay 'display "******")
-	  )))))
-
-(defun hide-hash-sums ()
-  "Hide hash-sums in buffer."
-  (interactive)
-  (let ((hash-rx (rx
-     		  (seq word-boundary
-     		       (>= 32 hex-digit)))))
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward hash-rx nil t)
-	(let ((overlay (make-overlay (match-beginning 0) (match-end 0))))
-	  (overlay-put overlay 'hidden-text t)
-	  (overlay-put overlay 'display "******")
-	  )))))
+For a list of all keys in order, with duplicates, use `mapcar' with `car' over
+ALIST."
+    (let ( result
+           (rest alist) )
+      (while rest
+	(let ((pair (car rest)))
+          (unless (member (car pair) result)
+	    (push (car pair) result))
+          (setq rest (cdr rest))))
+      (reverse result))))
 
 ;;;###autoload
 (defun hide-secrets ()
-  "Hide IP addresses, passwords, and email addresses in the buffer."
+  "Hide secrets like IP addresses, passwords, email addresses etc. in the buffer."
   (interactive)
-  (hide-mac-addresses)
-  (hide-ip-addresses)
-  (hide-passwords)
-  (hide-names)
-  (hide-email-addresses)
-  (hide-private-keys)
-  (hide-hash-sums)
+  (mapcar 'hide--secret (asoc-keys hide-secrets-alist))
   )
 
 (defun show-secrets ()

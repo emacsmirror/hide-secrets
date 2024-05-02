@@ -26,6 +26,44 @@ At the moments it tries to hide:
 
 Please feel free to ask for additional secrets.
 
+** Customize
+
+You can also add your own secrets by customizing hide-secrets-alist.
+
+** Installation
+
+You can either download hide-secrets.el from gitlab and add
+
+#+BEGIN_SRC emacs-lisp
+(require 'hide-secrets)
+#+END_SRC
+
+to your Emacs init file; or you can install the package with use-package using quelpa like this:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package hide-secrets
+    :quelpa (hide-secrets
+	     :fetcher git
+	     :url "https://gitlab.com/ostseepinguin1/hide-secrets-el.git")
+    :ensure t
+    :bind (("C-c s" . hide-secrets)
+	   ("C-c S" . show-secrets))
+    :autoload hide-secrets-mode)
+#+END_SRC
+
+This would bind ~C-s s~ to =hide-secrets= and ~C-s S~ to =show-secrets=.
+
+** Usage
+
+You can hide secrets by invoking =hide-secrets= and show them with =show-secrets=.
+
+You can also activate the minor mode =hide-secrets-mode= that hides secrets as you type them.
+
+
+** TODO
+
+The package is still in early development. Next on my agenda is reveal mode support as an option. 
+
 
 # Local Variables:
 # jinx-languages: "en_US"
