@@ -54,6 +54,10 @@
     "משתמש" "bruger" "bruker" "notandi" "käyttäjä" "kasutaja" "utilizador"
     "mtumiaji" "користувач" "用戶" "用户" "yonghu"))
 
+(defvar hide-secrets-current-secret
+  nil
+  "Save current secret type when revealed with reveal mode.")
+
 ;; customization
 
 (defgroup hide-secrets nil
@@ -172,50 +176,73 @@
   "Get the display string to replace SECRET in the buffer"
   (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :display)))
 
-(defun hide--secret (secret)
+(defun hide--secret (secret &optional start end)
   "Hide all occurrences of SECRET in buffer.
-SECRET is a key in the hide-secrets-alist."
+SECRET is a key in the hide-secrets-alist.
+
+If START and END are give only hide occurences between
+these points."
   (let ((rx (hide-secets--get-regex secret))
 	(match (or (hide-secets--get-match secret) 0))
 	(display  (or (hide-secets--get-display secret) (make-string 10 ?*))))
     (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward rx nil t)
+      (goto-char (or start (point-min)))
+      (while (re-search-forward rx (or end nil) t)
 	(let ((overlay (make-overlay (match-beginning match) (match-end match))))
 	  (overlay-put overlay 'hidden-text t)
 	  (overlay-put overlay 'display display)
-	  (overlay-put overlay 'face hide-secrets-face))))))
+	  (overlay-put overlay 'face hide-secrets-face)
+	  (overlay-put overlay 'hide-secrets-type secret)
+	  (overlay-put overlay 'reveal-toggle-invisible
+                       #'hide-secrets--toggle))))))
+
+(defun hide-secrets--toggle (overlay hide)
+  "Toggle function for reveal mode."
+  (if hide
+      (hide--secret hide-secrets-current-secret
+		    (overlay-start overlay)
+		    (overlay-end overlay))
+    (show-secrets (overlay-start overlay) (overlay-end overlay))
+    (let ((secret
+	   (overlay-get overlay 'hide-secrets-type)))
+      (setq hide-secrets-current-secret secret))))
 
 ;;; from asoc.el
 ;;;###autoload
-(unless (locate-library "asoc.el")
-  (defun asoc-keys (alist)
-    "Return a list of unique keys in ALIST.
+(defun hide-secrets--asoc-keys (alist)
+  "Return a list of unique keys in ALIST.
 
 For a list of all keys in order, with duplicates, use `mapcar' with `car' over
 ALIST."
-    (let ( result
-           (rest alist) )
-      (while rest
-	(let ((pair (car rest)))
-          (unless (member (car pair) result)
-	    (push (car pair) result))
-          (setq rest (cdr rest))))
-      (reverse result))))
+  (let ( result
+         (rest alist) )
+    (while rest
+      (let ((pair (car rest)))
+        (unless (member (car pair) result)
+	  (push (car pair) result))
+        (setq rest (cdr rest))))
+    (reverse result)))
+
+
 
 ;;;###autoload
 (defun hide-secrets ()
   "Hide secrets like IP addresses, passwords, email addresses etc. in the buffer."
   (interactive)
-  (mapcar 'hide--secret (asoc-keys hide-secrets-alist))
+  (mapcar 'hide--secret (hide-secrets--asoc-keys hide-secrets-alist))
   )
 
-(defun show-secrets ()
-  "Remove all overlays with the `hidden-text' property in the buffer."
+(defun show-secrets (&optional start end)
+  "Remove all overlays with the `hidden-text' property in the buffer.
+
+ If START and END are given, only do so between these points."
   (interactive)
-  (dolist (overlay (overlays-in (point-min) (point-max)))
+  (dolist (overlay (overlays-in
+		    (or start (point-min))
+		    (or end (point-max))))
     (when (overlay-get overlay 'hidden-text)
       (delete-overlay overlay))))
+
 
 ;; minor mode
 ;;;###autoload

@@ -63,10 +63,14 @@ You can hide secrets by invoking =hide-secrets= and show them with =show-secrets
 
 You can also activate the minor mode =hide-secrets-mode= that hides secrets as you type them.
 
+** Reveal mode support
+
+If you use =hide-secrets-mode= you can additionally activate =reveal-mode= so secrets at point
+are reveal - shown in plain text.
 
 ** TODO
 
-The package is still in early development. Next on my agenda is reveal mode support as an option. 
+The package is still in early development. Next on my agenda is integration with all terminal emulators, like ansi-term an vterm.
 
 
 # Local Variables:
