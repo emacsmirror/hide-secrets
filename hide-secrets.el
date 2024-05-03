@@ -2,8 +2,8 @@
 ;; Copyright © 2020, by Sebastian Meisel
 
 ;; Author: Sebastian Meisel <sebastian.meisel@gmail.com>
-;; Version: 0.4
-;; Created:  April 30, 2024
+;; Version: 0.5
+;; Created:  May 5, 2024
 ;; Keywords: passwords, secrets, keys
 ;; Homepage: https://gitlab.com/ostseepinguin1/hide-secrets-el
 ;; Package-Requires: ((emacs "29.1"))
@@ -28,6 +28,8 @@
 ;;; Commentary:
 ;; This package provides functions for hiding secrets like IP addresses,
 ;; hash sums and passwords in Emacs buffers.
+
+;; Put (require 'hide-secrets) in you emacs init file.
 
 ;;; Code: 
 
