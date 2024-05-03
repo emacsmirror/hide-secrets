@@ -30,7 +30,9 @@ Please feel free to ask for additional secrets.
 
 ** Customize
 
-You can also add your own secrets by customizing hide-secrets-alist.
+You can also add your own secrets by customizing =hide-secrets-alist=.
+
+The face that is used to highlight where secrets are replaced by display string to hide them is also customizable with the =hide-secrets-face= variable.
 
 ** Installation
 

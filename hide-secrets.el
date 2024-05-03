@@ -152,7 +152,11 @@
   :group 'hide-secrets
   :type 'alist)
 
-
+(defcustom hide-secrets-face
+  'modus-themes-subtle-cyan
+  "Face use to hightlight the secrets hidden by hide-secrets."
+  :group 'hide-secrets
+  :type 'face)
 
 ;; functions
 (defun hide-secets--get-regex (secret)
@@ -180,7 +184,7 @@ SECRET is a key in the hide-secrets-alist."
 	(let ((overlay (make-overlay (match-beginning match) (match-end match))))
 	  (overlay-put overlay 'hidden-text t)
 	  (overlay-put overlay 'display display)
-	  (overlay-put overlay 'face 'modus-themes-subtle-cyan))))))
+	  (overlay-put overlay 'face hide-secrets-face))))))
 
 ;;; from asoc.el
 ;;;###autoload
