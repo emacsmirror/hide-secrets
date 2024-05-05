@@ -70,7 +70,7 @@ are reveal - shown in plain text.
 
 ** TODO
 
-The package is still in early development. Next on my agenda is integration with all terminal emulators, like ansi-term an vterm.
+The package is still in early development. Next on my agenda is integration with all terminal emulators, like (ansi-)term an vterm, which turn out, to be much more difficult then eshell and eat. Don't know yet, if I can realize this. Help would be appreciated.
 
 
 # Local Variables:

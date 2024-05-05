@@ -29,9 +29,9 @@
 ;; This package provides functions for hiding secrets like IP addresses,
 ;; hash sums and passwords in Emacs buffers.
 
-;; Put (require 'hide-secrets) in you emacs init file.
+;; Put (require 'hide-secrets) in you Emacs init file.
 
-;;; Code: 
+;;; Code:
 
 
 ;; variables
@@ -148,25 +148,24 @@
     ("hash" . (:regexp (rx
      			(seq word-boundary
      			     (>= 32 hex-digit))))))
-  "List of secrets to hide.Each secret is identified by a KEYWORD string.Then
-   for each secret a property list must contain the following keywords:
-
-   :regex a regular expression to match the secret.
-   :match the matching group.Default to 0 (full match).
-   :display a string that is displayed instead of the secret
-           (default:***********)."
+  "List of secrets to hide.  Each secret is identified by a KEYWORD string.
+For each secret a property list must contain the following keyword:
+:regex a regular expression to match the secret.
+The following keywords are optional:
+:match the matching group.Default to 0 (full match).
+:display a string that is displayed instead of the secret (default:***********)."
   :group 'hide-secrets
   :type 'alist)
 
 (defcustom hide-secrets-face
   'modus-themes-subtle-cyan
-  "Face use to hightlight the secrets hidden by hide-secrets."
+  "Face use to highlight the secrets hidden by hide-secrets."
   :group 'hide-secrets
   :type 'face)
 
 ;; functions
 (defun hide-secets--get-regex (secret)
-  "Get the regex to match SECRET in the buffer"
+  "Get the regex to match SECRET in the buffer."
   (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :regexp)))
 
 (defun hide-secets--get-match (secret)
@@ -175,7 +174,7 @@
 
 
 (defun hide-secets--get-display (secret)
-  "Get the display string to replace SECRET in the buffer"
+  "Get the display string to replace SECRET in the buffer."
   (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :display)))
 
 (defun hide--secret (secret &optional start end)
@@ -199,7 +198,10 @@ these points."
                        #'hide-secrets--toggle))))))
 
 (defun hide-secrets--toggle (overlay hide)
-  "Toggle function for reveal mode."
+  "Toggle function for reveal mode.
+
+OVERLAY specifies the overlay to reveal.
+If HIDE is true it is reveal else it is hidden again."
   (if hide
       (hide--secret hide-secrets-current-secret
 		    (overlay-start overlay)
@@ -228,11 +230,12 @@ ALIST."
 
 
 ;;;###autoload
-(defun hide-secrets ()
-  "Hide secrets like IP addresses, passwords, email addresses etc. in the buffer."
+(defun hide-secrets (&optional start end)
+  "Hide secrets like IP addresses, passwords, email addresses etc. in the buffer.
+
+ If START and END are given, only do so between these points."
   (interactive)
-  (mapcar 'hide--secret (hide-secrets--asoc-keys hide-secrets-alist))
-  )
+  (mapcar (lambda (secret) (hide--secret secret (or start) (or end))) (hide-secrets--asoc-keys hide-secrets-alist)))
 
 (defun show-secrets (&optional start end)
   "Remove all overlays with the `hidden-text' property in the buffer.
