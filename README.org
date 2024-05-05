@@ -51,15 +51,18 @@ to your Emacs init file; or you can install the package with use-package using q
 	     :url "https://gitlab.com/ostseepinguin1/hide-secrets-el.git")
     :ensure t
     :bind (("C-c s" . hide-secrets)
-	   ("C-c S" . show-secrets))
+	   ("C-c S" . hide-secrets-show))
     :autoload hide-secrets-mode)
 #+END_SRC
 
-This would bind ~C-s s~ to =hide-secrets= and ~C-s S~ to =show-secrets=.
+#+RESULTS:
+: hide-secrets-show
+
+This would bind ~C-s s~ to =hide-secrets= and ~C-s S~ to hide-secrets-show.
 
 ** Usage
 
-You can hide secrets by invoking =hide-secrets= and show them with =show-secrets=.
+You can hide secrets by invoking =hide-secrets= and show them with =hide-secrets-show=.
 
 You can also activate the minor mode =hide-secrets-mode= that hides secrets as you type them.
 
