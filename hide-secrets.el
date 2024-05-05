@@ -1,10 +1,10 @@
-;;; hide-secrets.el --- A package for hiding IP addresses and passwords in Emacs buffers.  -*- lexical-binding: t; -*-
+;;; hide-secrets.el --- A package for hiding secrets in buffers  -*- lexical-binding: t; -*-
 ;; Copyright © 2020, by Sebastian Meisel
 
 ;; Author: Sebastian Meisel <sebastian.meisel@gmail.com>
 ;; Version: 0.5
 ;; Created:  May 5, 2024
-;; Keywords: passwords, secrets, keys
+;; Keywords: tools
 ;; Homepage: https://gitlab.com/ostseepinguin1/hide-secrets-el
 ;; Package-Requires: ((emacs "29.1"))
 
@@ -27,7 +27,7 @@
 
 ;;; Commentary:
 ;; This package provides functions for hiding secrets like IP addresses,
-;; hash sums and passwords in Emacs buffers.
+;; hash sums and passwords in buffers.
 
 ;; Put (require 'hide-secrets) in you Emacs init file.
 
@@ -44,12 +44,12 @@
       ?\u17d6 ; ?\N{KHMER SIGN CAMNUC PII KUUH}
       )))
 
-(defconst name-word-equivalents
+(defconst hide-secrets-name-word-equivalents
   '("name" "имя" "नाम" "nombre" "nom" "nome" "নাম" "naam" "नाव" "പേര്" "பெயர்"
     "పేరు" "ਨਾਮ" "नाम" "নাম" "jina" "nom" "නම" "نام" "اسم" "שם" "navn" "nom"
     "nombre" "nafn" "نام" "nimi" "nome" "imya" "பெயர்" "الاسم" "ім'я" "اسم" "名"))
 
-(defconst user-word-equivalents
+(defconst hide-secrets-user-word-equivalents
   '("user" "Benutzer" "пользователь" "उपयोगकर्ता" "usuario" "utilisateur" "utente"
     "ব্যবহারকারী" "gebruiker" "वापरकर्ता" "ഉപയോക്താവ്" "பயனர்" "వాడుకరి" "ਯੂਜ਼ਰ"
     "प्रयोगकर्ता" "प्रयोगकर्ता" "ବ୍ୟବହାରକର୍ତ୍ତା" "mtumiaji" "notandi" "භාෂාවෙහි පරිශීලක" "صارف"
@@ -164,28 +164,28 @@ The following keywords are optional:
   :type 'face)
 
 ;; functions
-(defun hide-secets--get-regex (secret)
+(defun hide-secrets--get-regex (secret)
   "Get the regex to match SECRET in the buffer."
   (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :regexp)))
 
-(defun hide-secets--get-match (secret)
+(defun hide-secrets--get-match (secret)
   "Get the display matching group of the regex matching SECRET to replace."
   (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :match)))
 
 
-(defun hide-secets--get-display (secret)
+(defun hide-secrets--get-display (secret)
   "Get the display string to replace SECRET in the buffer."
   (eval (plist-get (cdr (assoc secret hide-secrets-alist)) :display)))
 
-(defun hide--secret (secret &optional start end)
+(defun hide-secrets--hide (secret &optional start end)
   "Hide all occurrences of SECRET in buffer.
 SECRET is a key in the hide-secrets-alist.
 
 If START and END are give only hide occurences between
 these points."
-  (let ((rx (hide-secets--get-regex secret))
-	(match (or (hide-secets--get-match secret) 0))
-	(display  (or (hide-secets--get-display secret) (make-string 10 ?*))))
+  (let ((rx (hide-secrets--get-regex secret))
+	(match (or (hide-secrets--get-match secret) 0))
+	(display  (or (hide-secrets--get-display secret) (make-string 10 ?*))))
     (save-excursion
       (goto-char (or start (point-min)))
       (while (re-search-forward rx (or end nil) t)
@@ -203,16 +203,15 @@ these points."
 OVERLAY specifies the overlay to reveal.
 If HIDE is true it is reveal else it is hidden again."
   (if hide
-      (hide--secret hide-secrets-current-secret
-		    (overlay-start overlay)
-		    (overlay-end overlay))
-    (show-secrets (overlay-start overlay) (overlay-end overlay))
+      (hide-secrets--hide hide-secrets-current-secret
+			  (overlay-start overlay)
+			  (overlay-end overlay))
+    (hide-secrets-show (overlay-start overlay) (overlay-end overlay))
     (let ((secret
 	   (overlay-get overlay 'hide-secrets-type)))
       (setq hide-secrets-current-secret secret))))
 
 ;;; from asoc.el
-;;;###autoload
 (defun hide-secrets--asoc-keys (alist)
   "Return a list of unique keys in ALIST.
 
@@ -235,9 +234,9 @@ ALIST."
 
  If START and END are given, only do so between these points."
   (interactive)
-  (mapcar (lambda (secret) (hide--secret secret (or start) (or end))) (hide-secrets--asoc-keys hide-secrets-alist)))
+  (mapcar (lambda (secret) (hide-secrets--hide secret (or start) (or end))) (hide-secrets--asoc-keys hide-secrets-alist)))
 
-(defun show-secrets (&optional start end)
+(defun hide-secrets-show (&optional start end)
   "Remove all overlays with the `hidden-text' property in the buffer.
 
  If START and END are given, only do so between these points."
@@ -261,7 +260,7 @@ ALIST."
 	       (add-hook 'eat-update-hook 'hide-secrets nil t))
 	     (when (equal major-mode #'eshell-mode)
 	       (add-hook 'eshell-post-command-hook 'hide-secrets nil t)))
-    (show-secrets)
+    (hide-secrets-show)
     (remove-hook 'post-command-hook 'hide-secrets t)
     (remove-hook 'eat-update-hook 'hide-secrets t)
     (remove-hook 'eshell-post-command-hook 'hide-secrets t)))
