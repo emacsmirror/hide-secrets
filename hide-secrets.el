@@ -71,12 +71,12 @@
 			    (rx-to-string
 			     `(: bol (* nonl)
       				 (or
-				  (| . ,user-word-equivalents)
-				  (| . ,name-word-equivalents)
+				  (| . ,hide-secrets-user-word-equivalents)
+				  (| . ,hide-secrets-name-word-equivalents)
 				  (seq
-				   (| . ,user-word-equivalents)
+				   (| . ,hide-secrets-user-word-equivalents)
 				   (zero-or-one blank)
-				   (| . ,name-word-equivalents)))
+				   (| . ,hide-secrets-name-word-equivalents)))
 				 (* nonl) (any . ,password-colon-equivalents)
 				 (? "\^@") (* blank)))
 			    "\\(.*\\)")
