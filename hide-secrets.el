@@ -35,7 +35,7 @@
 
 
 ;; variables
-(when (string< emacs-version "30.1")
+(when (not (boundp 'password-colon-equivalents))
   (defconst password-colon-equivalents
     '(?\u003a ; ?\N{COLON}
       ?\uff1a ; ?\N{FULLWIDTH COLON}
@@ -119,7 +119,7 @@
 			   (repeat 1 3 digit) "." (repeat 1 3 digit)
 			   word-boundary)
 		       :display "123.145.167.189"))
-    ("IPv6" . (:regexp (rx 
+    ("IPv6" . (:regexp (rx
 			(or
 			 (seq (repeat 2 2 ":")(repeat 1 4 hex-digit))
 			 (seq word-boundary
@@ -159,7 +159,7 @@ The following keywords are optional:
 
 (defcustom hide-secrets-face
   'modus-themes-subtle-cyan
-  "Face use to highlight the secrets hidden by hide-secrets."
+  "Face use to highlight the secrets hidden by `hide-secrets'."
   :group 'hide-secrets
   :type 'face)
 
@@ -254,16 +254,15 @@ ALIST."
   "Minor mode to hide secrets like password, keys and IP addresses in buffers."
   :lighter " HS"
   (if hide-secrets-mode
-      (progn (hide-secrets)
-	     (add-hook 'post-command-hook 'hide-secrets nil t)
-	     (when (equal major-mode #'eat-mode)
-	       (add-hook 'eat-update-hook 'hide-secrets nil t))
+      (progn (add-hook 'post-command-hook #'hide-secrets nil t)
+	     (when (equal major-mode 'eat-mode)
+	       (add-hook 'eat-update-hook #'hide-secrets nil t))
 	     (when (equal major-mode #'eshell-mode)
-	       (add-hook 'eshell-post-command-hook 'hide-secrets nil t)))
+	       (add-hook 'eshell-post-command-hook #'hide-secrets nil t)))
     (hide-secrets-show)
-    (remove-hook 'post-command-hook 'hide-secrets t)
-    (remove-hook 'eat-update-hook 'hide-secrets t)
-    (remove-hook 'eshell-post-command-hook 'hide-secrets t)))
+    (remove-hook 'post-command-hook #'hide-secrets t)
+    (remove-hook 'eat-update-hook #'hide-secrets t)
+    (remove-hook 'eshell-post-command-hook #'hide-secrets t)))
 
 (provide 'hide-secrets)
 
